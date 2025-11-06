@@ -1,0 +1,3 @@
+services:
+  umd_cmns.cmns_helper:
+    class: Drupal\umd_cmns\CmnsHelper

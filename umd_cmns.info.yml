@@ -1,0 +1,7 @@
+name: UMD CMNS
+type: module
+description: 'UMD CMNS integration'
+package: Custom
+core_version_requirement: ^10.0
+dependencies:
+  - feeds:feeds
