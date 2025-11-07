@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\umd_cmns\Drush\Commands;
+namespace Drupal\umd_cmns_research\Drush\Commands;
 
 use Drupal\Core\Utility\Token;
 use Drush\Attributes as CLI;
@@ -10,10 +10,10 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * A Drush commandfile.
  */
-final class UmdCmnsCommands extends DrushCommands {
+final class UmdCmnsResearchCommands extends DrushCommands {
 
   /**
-   * Constructs an UmdCmnsCommands object.
+   * Constructs an UmdCmnsResearchCommands object.
    */
   public function __construct(
     private readonly Token $token,
@@ -32,16 +32,15 @@ final class UmdCmnsCommands extends DrushCommands {
   }
 
 	/**
-   * Unpublish faculty tags not needed on the site
+   * Add authors to papers via orcid
    *
-   * @command umd_cmns:unpublish-faculty-tags-not-on-site
-   * @aliases unpubfactags
-   * @usage umd_cmns:unpublish-faculty-tags-not-on-site 
-   *   Unpublishes all faculty tags, then publishes those faculty tags that find 
-   *   a match for a published team member on the site
+   * @command umd_cmns_research:add-authors-to-papers
+   * @aliases addauthors
+   * @usage umd_cmns_research:add-authors-to-papers 
+   *   Adds authors from orcid to papers that are created after initial import 9.12.25
    */
-	public function unPublishFacultyTags() {
-  	\Drupal::service('umd_cmns.cmns_helper')->unpublishFacultyTags();      
+  public function addAuthorsToPapers() {
+  	\Drupal::service('umd_cmns_research.umd_cmns_research_helper')->addAuthorsToPapers();      
     \Drupal::messenger()->addStatus('drush command was executed.');
-  }   
+  }  
 }

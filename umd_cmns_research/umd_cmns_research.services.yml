@@ -1,0 +1,3 @@
+services:
+  umd_cmns_research.umd_cmns_research_helper:
+    class: Drupal\umd_cmns_research\UmdCmnsResearchHelper

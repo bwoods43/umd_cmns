@@ -4,4 +4,3 @@ description: 'UMD CMNS integration'
 package: Custom
 core_version_requirement: ^10.0
 dependencies:
-  - feeds:feeds

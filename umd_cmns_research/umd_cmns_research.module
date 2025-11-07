@@ -1,0 +1,104 @@
+<?php
+use Drupal\views\ViewExecutable;
+use Drupal\Core\Render\BubbleableMetadata;
+use Drupal\node\NodeInterface;
+use Drupal\node\Entity\Node;
+use Drupal\Core\Messenger\MessengerInterface;
+    
+/**
+ * Implements hook_views_pre_view().
+ *
+ */
+function umd_cmns_research_views_pre_view(\Drupal\views\ViewExecutable $view, $display_id, array $args) {
+  // Check if the view is the one we want to alter.
+  if ($view->id() === 'papers' && $display_id === 'block_2') {  
+  	// look up node to see if orcid exists
+  	$node = \Drupal::request()->attributes->get('node');
+  	
+  	// return on bad request
+  	if (!$node) { return; }
+  	
+  	$node = \Drupal\node\Entity\Node::load($node->id());	
+		$orcid = $node->get('field_orcid')->getValue();
+		// set contextual filter as the team member's orcid				
+  	if ($orcid) {
+      //$args[0] = '220000-0002-7269-342X';
+      $args[0] = $orcid[0]['value'];
+      $view->setArguments($args);  	
+  	}
+  }  
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_update().
+ * https://drupal.stackexchange.com/questions/307545/auto-create-a-feed-when-a-node-is-added
+ * auto-create a feed when a node is updated
+ */
+function umd_cmns_research_node_update(\Drupal\node\Entity\Node $node) {
+  if ($node->bundle() === 'team') {
+  
+  	// type of feed we are creating
+  	$feed_type_id = 'orcid_api';
+  	
+  	//orcid of team member that was just updated
+  	$orcids = $node->get('field_orcid')->getValue();  	
+
+  	if ($orcids) {
+  		$orcid = $orcids[0]['value'];
+  		
+  		if ($orcid) {
+  		
+  			// title of feed
+  			$feed_title = "Orcid feed for {$node->label()} " . $orcid;
+
+				// if feed already exists, do not create it
+				$query = \Drupal::entityQuery('feeds_feed')
+  				->condition('type', 'orcid_api')
+  				->condition('title', $orcid, 'CONTAINS')
+  				->range(0,1)
+  				->accessCheck(TRUE);
+  				//->__toString();
+					//echo $query;
+				$result = $query->execute();   
+
+				// only one nid returned
+				$fid = reset($result);
+			 	
+  			if (!$fid) {
+    			$feed = \Drupal\feeds\Entity\Feed::create([
+      			// Name the new Feed after the node; or anything you want!
+      			'title' => $feed_title,
+
+      			// Assign the ID of the Feed Type to use for generating this Feed.
+      			'type' => $feed_type_id,
+
+      			// This will vary depending on the type of importer.
+      			'source' => 'https://pub.orcid.org/v3.0/' . $orcid . '/works',
+      
+      			// Authorization Header Key:
+      			'key' => 'add bearer token here',
+
+      			// Optionally, set uid to 1 to always belong to the Drupal superuser.
+      			'uid' => \Drupal::currentUser()->id(),
+    			]);
+    			// Kick off the import after successfully saving the Feed. 
+    			if (in_array($feed->save(), [SAVED_NEW, SAVED_UPDATED], TRUE)) {
+      			$feed->import();
+    			};  	
+  			}  	
+  		  		
+  		}
+  	}
+  	
+  }
+}
+
+/**
+ * Implements hook_cron().
+ */
+function umd_cmns_research_cron() {      
+  \Drupal::service('umd_cmns_research.umd_cmns_research_helper')->addAuthorsToPapers();      
+
+  // Log message:
+  \Drupal::messenger()->addStatus('umd_cmns_research_cron() was executed.');
+}

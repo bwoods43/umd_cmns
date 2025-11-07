@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\umd_cmns\Plugin\Tamper;
+namespace Drupal\umd_cmns_research\Plugin\Tamper;
 
 use Drupal\tamper\TamperableItemInterface;
 use Drupal\tamper\TamperBase;
