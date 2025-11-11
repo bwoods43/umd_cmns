@@ -6,3 +6,4 @@ core_version_requirement: ^10.0
 dependencies:
   - 'umd_cmns:umd_cmns'
   - 'feeds:feeds'
+  - 'key:key'

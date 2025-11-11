@@ -23,24 +23,36 @@ class UmdCmnsResearchHelper {
   	$contributors_array = []; //storage for author ids
  	
   	try {
+
+    	// inject key module service to get bearer token
+    	$key_id = 'umd_orcid_token';
+			$key_entity = \Drupal::service('key.repository')->getKey($key_id);			
+			$key_entity_value = '';
+
+			if (isset($key_entity)) {
+				$key_entity_value = $key_entity->getKeyValue();			
+			}
+
     	$response = $client->get($orcid_work_endpoint, [
       	'headers' => [
-        	'Authorization' => 'add bearer token here',
+        	'Authorization' => $key_entity_value,
         	'Content-Type' => 'application/vnd.orcid+xml',
       	],
     	]);
 
 			$results = $response->getBody()->getContents();
-	
+
 			if ($results) {	
-				$xml = simplexml_load_string($results);
+				// remove extra selectors so that the php simplexml function will work properly
+				$xml = str_replace('xmlns:internal="http://www.orcid.org/ns/internal" xmlns:education="http://www.orcid.org/ns/education" xmlns:distinction="http://www.orcid.org/ns/distinction" xmlns:deprecated="http://www.orcid.org/ns/deprecated" xmlns:other-name="http://www.orcid.org/ns/other-name" xmlns:membership="http://www.orcid.org/ns/membership" xmlns:error="http://www.orcid.org/ns/error" xmlns:common="http://www.orcid.org/ns/common" xmlns:record="http://www.orcid.org/ns/record" xmlns:personal-details="http://www.orcid.org/ns/personal-details" xmlns:keyword="http://www.orcid.org/ns/keyword" xmlns:email="http://www.orcid.org/ns/email" xmlns:external-identifier="http://www.orcid.org/ns/external-identifier" xmlns:funding="http://www.orcid.org/ns/funding" xmlns:preferences="http://www.orcid.org/ns/preferences" xmlns:address="http://www.orcid.org/ns/address" xmlns:invited-position="http://www.orcid.org/ns/invited-position" xmlns:work="http://www.orcid.org/ns/work" xmlns:history="http://www.orcid.org/ns/history" xmlns:employment="http://www.orcid.org/ns/employment" xmlns:qualification="http://www.orcid.org/ns/qualification" xmlns:service="http://www.orcid.org/ns/service" xmlns:person="http://www.orcid.org/ns/person" xmlns:activities="http://www.orcid.org/ns/activities" xmlns:researcher-url="http://www.orcid.org/ns/researcher-url" xmlns:peer-review="http://www.orcid.org/ns/peer-review" xmlns:bulk="http://www.orcid.org/ns/bulk" xmlns:research-resource="http://www.orcid.org/ns/research-resource"', '', $results);
+				$xml = simplexml_load_string($xml);
 				$json = json_encode($xml);
 				$array = json_decode($json,TRUE);
 
 				$contributors = 0;
 				if (isset($array['work:contributors'])) {
 					foreach ($array['work:contributors'] as $contributors) {
-						if ($contributors['work:credit-name']) {
+						if (isset($contributors['work:credit-name'])) {
 							$contributors_array[] = $contributors['work:credit-name'];				
 						} else {
 							foreach ($contributors as $contributor) {
@@ -49,79 +61,18 @@ class UmdCmnsResearchHelper {
 						}
 					}
 				}
+			} else {
+				// no results found
+    		\Drupal::messenger()->addStatus(t('No results - ensure that you have populated the umd_orcid_token key with the proper value'));			
 			}
     	// Process the data
   	} catch (RequestException $e) {
     	// Handle exceptions
-    	\Drupal::messenger()->addStatus(t('Update Author error with ' . $orcid_work_endpoint));
+    	\Drupal::messenger()->addStatus(t('No result found with ' . $orcid_work_endpoint));
   	}	
+  	
   	return $contributors_array;
-	}
-
-
-  /**
-   * Site should display faculty tags for those faculty members on a given site.
-   * This helper function targets the Faculty parent tag, unpublishes all faculty
-   * child tags and then republishes all faculty child tags that have a value for
-   * field_user_group in a Team node.
-   * Function can be run via cron or drush.
-   */
-	public function unpublishFacultyTags() {
-
-  	$parent_term_id = 240; // Faculty term id on the astronomy site
-
-		// Inject the entity type manager if you are in a class.
-		$term_storage = \Drupal::entityTypeManager()->getStorage('taxonomy_term');
-
-		// Create the entity query.
-		$query = $term_storage->getQuery();
-
-		// Filter by vocabulary machine name.
-		$query->condition('vid', 'tags');
-		$query->condition('parent', $parent_term_id);
- 		$query->accessCheck(FALSE); // Check access for current user.
-
-		// Execute the query to get an array of term IDs.
-		$tids = $query->execute();
-
-  	if (!empty($tids)) {
-  		// Load multiple term entities at once for better performance.
-  		$terms = $term_storage->loadMultiple($tids);
-
-  		foreach ($terms as $term) {
-    		// Set the value of the custom boolean field to '0' (false).
-    		$term->set('status', 0);
-
-    		// Save the term.
-    		$term->save();
-  		}
-  
-    	foreach ($tids as $key=>$tid) {
-  			$nids = \Drupal::entityQuery('node')
-    			->condition('type', 'team')
-    			->condition('field_user_group', $tid)
-    			->condition('status', 1)
-    			//	->range(0,2)
-      		->accessCheck(FALSE) // Check access for current user.
-    			->execute();
-
-				// if not empty, publish the term
-				if (!empty($nids)) {
-					$term = Term::load($tid);				
-					if ($term) {
-  					$term->set('status', 1);
-  					$term->save();
-  					// \Drupal::messenger()->addStatus(t('The taxonomy term with ID @tid has been published.', ['@tid' => $tid]));
-					}		
-				}
-			}   
-  	} 
-
-  	\Drupal::messenger()->addStatus(t('Terms have been processed'));
-
-    return;
-  }
-
+	}  
 
   /**
    * Initial data returned for orcid papers does not include information for all 
@@ -133,12 +84,14 @@ class UmdCmnsResearchHelper {
   	$nids = \Drupal::entityQuery('node')
     	->condition('type', 'paper')
     	->notExists('field_authors')
-			->condition('nid', 8617, '>') // skip initial paper imports
+		//	->condition('nid', 8400, '>') // skip initial paper imports
+			->range(0, 200)
+			->sort('created', 'DESC')
       ->accessCheck(FALSE) // Check access for current user.
     	->execute();
-    
+
     foreach ($nids as $nid) {
-   // echo "NID!! " . $nid;
+  // echo "NID!! " . $nid;
     	$node = Node::load($nid);
     	if ($node) {   		
     		// ID specific to a paper
@@ -149,7 +102,7 @@ class UmdCmnsResearchHelper {
 				foreach ($orcid_ids as $item) {
 					echo $orcid_workid . " " . $item['value'] . "\r\n";
     			if ($orcid_workid && $item['value']) {
-    				$data = $this->getDataFromOrcid($orcid_workid, $item['value']);   			
+    				$data = $this->getDataFromOrcid($orcid_workid, $item['value']);  			
     				if ($data) {
     					$node->set('field_authors', $data);
     					$node->save();
@@ -160,8 +113,5 @@ class UmdCmnsResearchHelper {
     }   
   	\Drupal::messenger()->addStatus(t('Authors have been updated.'));
   }
-
-  
-  
 }
 

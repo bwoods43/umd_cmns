@@ -58,13 +58,22 @@ function umd_cmns_research_node_update(\Drupal\node\Entity\Node $node) {
   				->range(0,1)
   				->accessCheck(TRUE);
   				//->__toString();
-					//echo $query;
 				$result = $query->execute();   
 
 				// only one nid returned
 				$fid = reset($result);
 			 	
   			if (!$fid) {
+
+    			// inject key module service to get bearer token
+    			$key_id = 'umd_orcid_token';
+					$key_entity = \Drupal::service('key.repository')->getKey($key_id);			
+					$key_entity_value = '';
+
+					if (isset($key_entity)) {
+						$key_entity_value = $key_entity->getKeyValue();			
+					}
+
     			$feed = \Drupal\feeds\Entity\Feed::create([
       			// Name the new Feed after the node; or anything you want!
       			'title' => $feed_title,
@@ -76,7 +85,7 @@ function umd_cmns_research_node_update(\Drupal\node\Entity\Node $node) {
       			'source' => 'https://pub.orcid.org/v3.0/' . $orcid . '/works',
       
       			// Authorization Header Key:
-      			'key' => 'add bearer token here',
+      			'key' => $key_entity_value,
 
       			// Optionally, set uid to 1 to always belong to the Drupal superuser.
       			'uid' => \Drupal::currentUser()->id(),
