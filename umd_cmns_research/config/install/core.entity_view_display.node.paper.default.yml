@@ -1,0 +1,106 @@
+uuid: ba9e310e-172a-47f0-8239-b815e0712022
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.paper.body
+    - field.field.node.paper.feeds_item
+    - field.field.node.paper.field_authors
+    - field.field.node.paper.field_bibcode
+    - field.field.node.paper.field_external_ids
+    - field.field.node.paper.field_journal_title
+    - field.field.node.paper.field_orcid_authors
+    - field.field.node.paper.field_orcid_multi
+    - field.field.node.paper.field_orcid_work_id
+    - field.field.node.paper.field_publication_date
+    - node.type.paper
+  module:
+    - custom_field
+    - datetime
+    - text
+    - user
+id: node.paper.default
+targetEntityType: node
+bundle: paper
+mode: default
+content:
+  body:
+    type: text_default
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
+    weight: 101
+    region: content
+  field_authors:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 105
+    region: content
+  field_bibcode:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 103
+    region: content
+  field_external_ids:
+    type: custom_formatter
+    label: above
+    settings:
+      fields: {  }
+    third_party_settings: {  }
+    weight: 107
+    region: content
+  field_journal_title:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 108
+    region: content
+  field_orcid_authors:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 110
+    region: content
+  field_orcid_multi:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 106
+    region: content
+  field_orcid_work_id:
+    type: number_integer
+    label: above
+    settings:
+      thousand_separator: ''
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 109
+    region: content
+  field_publication_date:
+    type: datetime_default
+    label: above
+    settings:
+      timezone_override: ''
+      format_type: medium
+    third_party_settings: {  }
+    weight: 104
+    region: content
+  links:
+    settings: {  }
+    third_party_settings: {  }
+    weight: 100
+    region: content
+hidden:
+  feeds_item: true

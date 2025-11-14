@@ -1,0 +1,48 @@
+uuid: a6a12cc5-34b0-4f4d-82f7-ad395b0372be
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.teaser
+    - field.field.node.paper.body
+    - field.field.node.paper.feeds_item
+    - field.field.node.paper.field_authors
+    - field.field.node.paper.field_bibcode
+    - field.field.node.paper.field_external_ids
+    - field.field.node.paper.field_journal_title
+    - field.field.node.paper.field_orcid_authors
+    - field.field.node.paper.field_orcid_multi
+    - field.field.node.paper.field_orcid_work_id
+    - field.field.node.paper.field_publication_date
+    - node.type.paper
+  module:
+    - text
+    - user
+id: node.paper.teaser
+targetEntityType: node
+bundle: paper
+mode: teaser
+content:
+  body:
+    type: text_summary_or_trimmed
+    label: hidden
+    settings:
+      trim_length: 600
+    third_party_settings: {  }
+    weight: 101
+    region: content
+  links:
+    settings: {  }
+    third_party_settings: {  }
+    weight: 100
+    region: content
+hidden:
+  feeds_item: true
+  field_authors: true
+  field_bibcode: true
+  field_external_ids: true
+  field_journal_title: true
+  field_orcid_authors: true
+  field_orcid_multi: true
+  field_orcid_work_id: true
+  field_publication_date: true

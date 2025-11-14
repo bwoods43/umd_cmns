@@ -1,0 +1,9 @@
+uuid: 9885f8d8-53d7-4bf0-a7a8-faf49d7c4ada
+langcode: en
+status: true
+dependencies: {  }
+name: 'ORCID Journal Titles'
+vid: orcid_journal_titles
+description: null
+weight: 0
+new_revision: false

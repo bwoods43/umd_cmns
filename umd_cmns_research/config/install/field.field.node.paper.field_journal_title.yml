@@ -1,0 +1,29 @@
+uuid: 89ab3e49-2891-4690-942f-9d9f05bd6c8e
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_journal_title
+    - node.type.paper
+    - taxonomy.vocabulary.orcid_journal_titles
+id: node.paper.field_journal_title
+field_name: field_journal_title
+entity_type: node
+bundle: paper
+label: 'Journal Title'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      orcid_journal_titles: orcid_journal_titles
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

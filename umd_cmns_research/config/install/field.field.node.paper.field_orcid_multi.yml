@@ -1,0 +1,19 @@
+uuid: 00265c9a-61b2-4e39-9dab-1c9df9bba31e
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_orcid_multi
+    - node.type.paper
+id: node.paper.field_orcid_multi
+field_name: field_orcid_multi
+entity_type: node
+bundle: paper
+label: 'ORCID multi'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

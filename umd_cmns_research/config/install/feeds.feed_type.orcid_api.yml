@@ -1,0 +1,286 @@
+uuid: 4b275960-9dc7-48f4-b693-17a049890598
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.paper.body
+    - field.field.node.paper.field_external_ids
+    - field.field.node.paper.field_journal_title
+    - field.field.node.paper.field_orcid_authors
+    - field.field.node.paper.field_orcid_multi
+    - field.field.node.paper.field_orcid_work_id
+    - field.field.node.paper.field_publication_date
+    - node.type.paper
+  module:
+    - custom_field
+    - feeds_ex
+    - feeds_http_auth_fetcher
+    - feeds_tamper
+    - node
+third_party_settings:
+  feeds_tamper:
+    tampers:
+      286a6c58-cc15-46e6-9986-9a435bd97025:
+        uuid: 286a6c58-cc15-46e6-9986-9a435bd97025
+        plugin: rewrite_orcid
+        source: orcids
+        weight: 0
+        label: 'Rewrite Orcid'
+      bd056196-6f6e-4a7e-86dc-4832759f8ece:
+        separator: ','
+        limit: null
+        uuid: bd056196-6f6e-4a7e-86dc-4832759f8ece
+        plugin: explode
+        source: orcids
+        weight: 1
+        label: Explode
+      ca93d177-29ad-4f9f-856d-abe0306bf748:
+        allowed_tags: ''
+        uuid: ca93d177-29ad-4f9f-856d-abe0306bf748
+        plugin: strip_tags
+        source: work_title
+        weight: 0
+        label: 'Strip tags'
+      14ef3f8c-7fe2-41be-8c4f-7c240c54fa44:
+        default_value: '1'
+        only_if_empty: true
+        uuid: 14ef3f8c-7fe2-41be-8c4f-7c240c54fa44
+        plugin: default_value
+        source: publication_day
+        weight: 0
+        label: 'Set value or default value'
+      3d9e8830-7fac-4c79-81b9-68bc07faa788:
+        text: '[publication_year]-[publication_month]-[publication_day]'
+        uuid: 3d9e8830-7fac-4c79-81b9-68bc07faa788
+        plugin: rewrite
+        source: publication_year
+        weight: 0
+        label: Rewrite
+      f9a78eb3-740f-47b4-8db1-148d80b0411a:
+        find_replace:
+          - "&lt;strong&gt;|\r"
+          - "&lt;em&gt;|\r"
+          - "&lt;/em&gt;|\r"
+          - '&lt;/strong&gt;|'
+        separator: '|'
+        case_sensitive: false
+        word_boundaries: false
+        whole: false
+        uuid: f9a78eb3-740f-47b4-8db1-148d80b0411a
+        plugin: find_replace_multiline
+        source: work_title
+        weight: 1
+        label: 'Find replace (multiline)'
+      34efaf92-149d-4adc-8283-6fe72902d2a9:
+        uuid: 34efaf92-149d-4adc-8283-6fe72902d2a9
+        plugin: rewrite_orcid_authors
+        source: orcid_authors
+        weight: 0
+        label: 'Rewrite Orcid Authors'
+      e5c9cd78-d3ae-44ff-99c8-6fd1f59ee4e0:
+        num_char: 255
+        ellipses: true
+        wordsafe: false
+        uuid: e5c9cd78-d3ae-44ff-99c8-6fd1f59ee4e0
+        plugin: truncate_text
+        source: journal_title
+        weight: 0
+        label: Truncate
+      58402dcc-345f-4619-9bd7-ccb72e54fdcc:
+        default_value: '1'
+        only_if_empty: true
+        uuid: 58402dcc-345f-4619-9bd7-ccb72e54fdcc
+        plugin: default_value
+        source: publication_month
+        weight: 0
+        label: 'Set value or default value'
+label: 'ORCID API'
+id: orcid_api
+description: ''
+help: ''
+import_period: 0
+fetcher: httpauth
+fetcher_configuration:
+  auto_detect_feeds: 0
+  use_pubsubhubbub: false
+  always_download: 0
+  fallback_hub: ''
+  request_timeout: '30'
+parser: xml
+parser_configuration:
+  context:
+    value: '/activities:works/activities:group/work:work-summary'
+  source_encoding:
+    - auto
+  display_errors: false
+  line_limit: 100
+  use_tidy: false
+processor: 'entity:node'
+processor_configuration:
+  values:
+    type: paper
+  langcode: en
+  insert_new: 1
+  update_existing: 2
+  update_non_existent: _keep
+  skip_hash_check: false
+  skip_validation: false
+  skip_validation_types: {  }
+  authorize: true
+  revision: false
+  expire: -1
+  owner_feed_author: false
+  owner_id: 0
+custom_sources:
+  work_title:
+    label: 'Work title'
+    machine_name: work_title
+    value: 'work:title/common:title'
+    raw: false
+    inner: false
+    type: xml
+  external_id:
+    label: 'External ID'
+    machine_name: external_id
+    value: 'common:external-ids/common:external-id/common:external-id-value'
+    raw: false
+    inner: false
+    type: xml
+  external_id_type:
+    label: 'External ID Type'
+    machine_name: external_id_type
+    value: 'common:external-ids/common:external-id/common:external-id-type'
+    raw: false
+    inner: false
+    type: xml
+  orcids:
+    value: orcids
+    label: orcids
+    machine_name: orcids
+    type: blank
+  journal_title:
+    label: 'Journal title'
+    machine_name: journal_title
+    value: 'work:journal-title'
+    raw: false
+    inner: false
+    type: xml
+  publication_year:
+    label: 'Publication Year'
+    machine_name: publication_year
+    value: 'common:publication-date/common:year'
+    raw: false
+    inner: false
+    type: xml
+  publication_month:
+    label: 'Publication Month'
+    machine_name: publication_month
+    value: 'common:publication-date/common:month'
+    raw: false
+    inner: false
+    type: xml
+  publication_day:
+    label: 'Publication Day'
+    machine_name: publication_day
+    value: 'common:publication-date/common:day'
+    raw: false
+    inner: false
+    type: xml
+  work_put_code:
+    label: 'Work put-code'
+    machine_name: work_put_code
+    value: '@put-code'
+    raw: false
+    inner: false
+    type: xml
+  orcid_authors:
+    value: 'Orcid Authors'
+    label: 'Orcid Authors'
+    machine_name: orcid_authors
+    type: blank
+mappings:
+  -
+    target: title
+    map:
+      value: work_title
+    settings:
+      language: null
+    unique:
+      value: 1
+  -
+    target: field_external_ids
+    map:
+      value: external_id
+      value_external_id_type: external_id_type
+    settings:
+      language: null
+      timezone: UTC
+      value_external_id_type:
+        reference_by: name
+        autocreate: false
+        autocreate_bundle: false
+    unique: {  }
+  -
+    target: temporary_target
+    map:
+      temporary: external_id_type
+  -
+    target: field_orcid_multi
+    map:
+      value: orcids
+    settings:
+      language: null
+    unique: {  }
+  -
+    target: temporary_target
+    map:
+      temporary: 'parent:source'
+  -
+    target: body
+    map:
+      value: work_title
+      summary: ''
+    settings:
+      language: null
+      format: plain_text
+  -
+    target: field_journal_title
+    map:
+      target_id: journal_title
+    settings:
+      language: ''
+      reference_by: name
+      autocreate: 1
+      autocreate_bundle: orcid_journal_titles
+  -
+    target: field_publication_date
+    map:
+      value: publication_year
+    settings:
+      language: null
+      timezone: UTC
+  -
+    target: temporary_target
+    map:
+      temporary: publication_month
+  -
+    target: temporary_target
+    map:
+      temporary: publication_day
+  -
+    target: field_orcid_work_id
+    map:
+      value: work_put_code
+    settings:
+      language: null
+    unique: {  }
+  -
+    target: field_orcid_authors
+    map:
+      target_id: orcid_authors
+    settings:
+      language: ''
+      reference_by: nid
+      feeds_item: guid
+      autocreate: 0
+      autocreate_bundle: team

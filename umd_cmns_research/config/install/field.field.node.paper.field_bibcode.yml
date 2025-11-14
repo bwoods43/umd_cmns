@@ -1,0 +1,19 @@
+uuid: a86e4948-d16f-4495-aef8-801576cfbdd1
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_bibcode
+    - node.type.paper
+id: node.paper.field_bibcode
+field_name: field_bibcode
+entity_type: node
+bundle: paper
+label: Bibcode
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string
