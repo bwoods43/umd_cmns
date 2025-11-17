@@ -3,5 +3,6 @@ type: module
 description: 'UMD CMNS integration'
 package: Custom
 core_version_requirement: ^10 || ^11
+version: '1.3'
 dependencies:
   - 'views:views'
