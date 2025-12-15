@@ -30,75 +30,155 @@ function umd_cmns_research_views_pre_view(\Drupal\views\ViewExecutable $view, $d
 }
 
 /**
+ * Function to determine if feed based on orcid exists
+ *
+ */
+function getFeedByOrcidInTitle($feed_type_id, $orcid) {
+	$query = \Drupal::entityQuery('feeds_feed')
+  	->condition('type', $feed_type_id)
+  	->condition('title', $orcid, 'CONTAINS')
+  	->range(0,1)
+  	->accessCheck(TRUE);
+		$result = $query->execute();   
+
+		$fid = reset($result);
+		if ($fid) {
+			return $fid;
+		} else {
+			return;
+		}
+}
+
+/**
+ * Deletes nodes associated with a specific feed ID.
+ *
+ * @param int $feed_id
+ *   The ID of the feed to delete nodes for.
+ * @param string $field_name
+ *   The name of the field storing the feed reference (e.g., 'feeds_item').
+ */
+function umd_cmns_research_delete_nodes_by_feed_id($feed_id, $field_name = 'feeds_item') {
+  // Use the entity query to find node IDs that match the feed ID.
+  $query = \Drupal::entityQuery('node')
+    ->condition($field_name . '.target_id', $feed_id)
+    ->accessCheck(FALSE); // Bypasses access checks for administrative operations.
+
+  $nids = $query->execute();
+
+  if (!empty($nids)) {
+    // Load multiple nodes at once.
+    $storage_handler = \Drupal::entityTypeManager()->getStorage('node');
+    $nodes = $storage_handler->loadMultiple($nids);
+
+    // Delete the nodes. The delete method handles all necessary cleanup.
+    $storage_handler->delete($nodes);
+
+    \Drupal::logger('umd_cmns_research')->info('Deleted @count nodes associated with feed ID @feed_id.', [
+      '@count' => count($nids),
+      '@feed_id' => $feed_id,
+    ]);
+  } else {
+    \Drupal::logger('umd_cmns_research')->info('No nodes found for feed ID @feed_id.', [
+      '@feed_id' => $feed_id,
+    ]);
+  }
+}
+
+/**
+ * Deletes a specific feed source configuration by its ID.
+ *
+ * @param string $feed_id
+ *   The ID (machine name) of the feed configuration to delete.
+ */
+function umd_cmns_research_delete_feed_source_by_id($feed_id) {
+  // Load the entity storage for 'feeds_feed'.
+  $entity_storage = \Drupal::entityTypeManager()->getStorage('feeds_feed');
+
+  // Load the specific feed configuration entity.
+  $feed_entity = $entity_storage->load($feed_id);
+
+  // Check if the feed source exists before attempting to delete it.
+  if ($feed_entity) {
+    $feed_entity->delete();
+    \Drupal::messenger()->addStatus(t('Feed source @id has been deleted.', ['@id' => $feed_id]));
+  } else {
+    \Drupal::messenger()->addWarning(t('Feed source @id not found.', ['@id' => $feed_id]));
+  }
+}
+
+/**
  * Implements hook_ENTITY_TYPE_update().
  * https://drupal.stackexchange.com/questions/307545/auto-create-a-feed-when-a-node-is-added
  * auto-create a feed when a node is updated
  */
 function umd_cmns_research_node_update(\Drupal\node\Entity\Node $node) {
   if ($node->bundle() === 'team') {
-  
-  	// type of feed we are creating
-  	$feed_type_id = 'orcid_api';
   	
   	//orcid of team member that was just updated
-  	$orcids = $node->get('field_orcid')->getValue();  	
+  	$orcids = $node->get('field_orcid')->getValue();  
 
   	if ($orcids) {
   		$orcid = $orcids[0]['value'];
-  		
+
   		if ($orcid) {
-  		
-  			// title of feed
-  			$feed_title = "Orcid feed for {$node->label()} " . $orcid;
 
-				// if feed already exists, do not create it
-				$query = \Drupal::entityQuery('feeds_feed')
-  				->condition('type', 'orcid_api')
-  				->condition('title', $orcid, 'CONTAINS')
-  				->range(0,1)
-  				->accessCheck(TRUE);
-  				//->__toString();
-				$result = $query->execute();   
+  			// type of feed
+  			$feed_type_id = 'orcid_api';
+  			
+  			// does the feed already exist?
+  			$fid = getFeedByOrcidInTitle($feed_type_id, $orcid);
 
-				// only one nid returned
-				$fid = reset($result);
-			 	
-  			if (!$fid) {
+				// determine whether a feed (and papers) needs to be created or deleted based on whether the team member is published 		
+				if ($node->isPublished()) {				
+  				if (!$fid) {
+  					// title of feed
+  					$feed_title = "Orcid feed for {$node->label()} " . $orcid;
 
-    			// inject key module service to get bearer token
-    			$key_id = 'umd_orcid_token';
-					$key_entity = \Drupal::service('key.repository')->getKey($key_id);			
-					$key_entity_value = '';
+    				// inject key module service to get bearer token
+    				$key_id = 'umd_orcid_token';
+						$key_entity = \Drupal::service('key.repository')->getKey($key_id);			
+						$key_entity_value = '';
 
-					if (isset($key_entity)) {
-						$key_entity_value = $key_entity->getKeyValue();			
-					}
+						if (isset($key_entity)) {
+							$key_entity_value = $key_entity->getKeyValue();			
+						}
 
-    			$feed = \Drupal\feeds\Entity\Feed::create([
-      			// Name the new Feed after the node; or anything you want!
-      			'title' => $feed_title,
+    				$feed = \Drupal\feeds\Entity\Feed::create([
+      				// Name the new Feed after the node; or anything you want!
+      				'title' => $feed_title,
 
-      			// Assign the ID of the Feed Type to use for generating this Feed.
-      			'type' => $feed_type_id,
+      				// Assign the ID of the Feed Type to use for generating this Feed.
+      				'type' => $feed_type_id,
 
-      			// This will vary depending on the type of importer.
-      			'source' => 'https://pub.orcid.org/v3.0/' . $orcid . '/works',
+      				// This will vary depending on the type of importer.
+      				'source' => 'https://pub.orcid.org/v3.0/' . $orcid . '/works',
       
-      			// Authorization Header Key:
-      			'key' => $key_entity_value,
+      				// Authorization Header Key:
+      				'key' => $key_entity_value,
 
-      			// Optionally, set uid to 1 to always belong to the Drupal superuser.
-      			'uid' => \Drupal::currentUser()->id(),
-    			]);
-    			// Kick off the import after successfully saving the Feed. 
-    			if (in_array($feed->save(), [SAVED_NEW, SAVED_UPDATED], TRUE)) {
-      			$feed->import();
-    			};  	
-  			}  	
-  		  		
+      				// Optionally, set uid to 1 to always belong to the Drupal superuser.
+      				'uid' => \Drupal::currentUser()->id(),
+    				]);
+    				// Kick off the import after successfully saving the Feed. 
+    				if (in_array($feed->save(), [SAVED_NEW, SAVED_UPDATED], TRUE)) {
+    					// TODO - notice appears if there are no feed items. Do we need additional error-checking for that?
+      				$feed->import();
+    				};  	
+  				} 				
+				} else {
+				// remove feed and paper because team member is unpublished
+					if ($fid) {
+						// delete items from feed
+						umd_cmns_research_delete_nodes_by_feed_id($fid);
+    				\Drupal::messenger()->addStatus(t('Nodes deletion process complete for Feed ID @id.', ['@id' => $fid]));
+
+						// delete feed
+						umd_cmns_research_delete_feed_source_by_id($fid);
+    				\Drupal::messenger()->addStatus(t('Feed deletion process complete for Feed ID @id.', ['@id' => $fid]));
+					}					
+				}	
   		}
-  	}
-  	
+  	}  	
   }
 }
 
