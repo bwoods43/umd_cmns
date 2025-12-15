@@ -3,6 +3,7 @@ type: module
 description: 'Functionality to add research papers to the site'
 package: UMD CMNS
 core_version_requirement: ^10 || ^11
+version: '1.3'
 dependencies:
   - 'umd_cmns:umd_cmns'
   - 'feeds:feeds'
