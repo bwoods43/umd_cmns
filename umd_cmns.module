@@ -51,7 +51,7 @@ function umd_cmns_views_pre_view(\Drupal\views\ViewExecutable $view, $display_id
   	if ($node->getType() == 'page') {
 			$primary_tag_id = $node->get('field_primary_tag')->getValue();		
 			// set contextual filter as page's primary tag		
-  		if ($primary_tag_id) {
+  		if ($primary_tag_id[0]['target_id']) {
       	$args[0] = $primary_tag_id[0]['target_id'];
       	$view->setArguments($args);  	
   		}  	

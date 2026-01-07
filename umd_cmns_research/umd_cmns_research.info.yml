@@ -8,3 +8,7 @@ dependencies:
   - 'umd_cmns:umd_cmns'
   - 'feeds:feeds'
   - 'key:key'
+  - 'custom_field:custom_field'
+  - 'feeds_ex:feeds_ex'
+  - 'feeds_http_auth_fetcher:feeds_http_auth_fetcher'
+  - 'feeds_tamper:feeds_tamper'
