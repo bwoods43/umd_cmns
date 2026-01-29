@@ -20,7 +20,7 @@ class RewriteOrcIdAuthors extends TamperBase {
   /**
    * {@inheritdoc}
    */
-  public function tamper($data, TamperableItemInterface $item = NULL) {
+  public function tamper($data, ?TamperableItemInterface $item = NULL) {
 
     $parent_source = '';
     $orcid_authors = [];
