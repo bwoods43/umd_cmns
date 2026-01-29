@@ -39,7 +39,8 @@ function umd_cmns_views_pre_view(\Drupal\views\ViewExecutable $view, $display_id
   	} 			
   }
 
-  if ($view->id() === 'team' && ($display_id === 'block_4' || $display_id === 'block_6' || $display_id === 'block_7')) {  
+  if ($view->id() === 'team' && ($view->displayHandlers->get($view->current_display)->getPluginId() == 'block')) {  
+  
   	// look up node to see if primary tag exists
   	$node = \Drupal::request()->attributes->get('node');
 
@@ -51,7 +52,7 @@ function umd_cmns_views_pre_view(\Drupal\views\ViewExecutable $view, $display_id
   	if ($node->getType() == 'page') {
 			$primary_tag_id = $node->get('field_primary_tag')->getValue();		
 			// set contextual filter as page's primary tag		
-  		if ($primary_tag_id[0]['target_id']) {
+  		if ($primary_tag_id) {
       	$args[0] = $primary_tag_id[0]['target_id'];
       	$view->setArguments($args);  	
   		}  	
