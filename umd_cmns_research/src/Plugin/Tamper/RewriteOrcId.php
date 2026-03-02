@@ -20,7 +20,7 @@ class RewriteOrcId extends TamperBase {
   /**
    * {@inheritdoc}
    */
-  public function tamper($data, TamperableItemInterface $item = NULL) {
+  public function tamper($data, ?TamperableItemInterface $item = NULL) {
 
     $bibcode = '';
     $parent_source = '';
