@@ -58,10 +58,12 @@ third_party_settings:
         label: Rewrite
       f9a78eb3-740f-47b4-8db1-148d80b0411a:
         find_replace:
-          - "&lt;strong&gt;|\r"
-          - "&lt;em&gt;|\r"
-          - "&lt;/em&gt;|\r"
+          - '&lt;strong&gt;|'
           - '&lt;/strong&gt;|'
+          - '&lt;em&gt;|'
+          - '&lt;/em&gt;|'
+          - '&lt;i&gt;|'
+          - '&lt;/i&gt;|'
         separator: '|'
         case_sensitive: false
         word_boundaries: false
@@ -94,6 +96,15 @@ third_party_settings:
         source: publication_month
         weight: 0
         label: 'Set value or default value'
+      248025b2-6559-4ca1-b7d4-5d39cfbea6aa:
+        find: /\r\n|\n|\r/
+        replace: ''
+        limit: null
+        uuid: 248025b2-6559-4ca1-b7d4-5d39cfbea6aa
+        plugin: find_replace_regex
+        source: work_title
+        weight: -10
+        label: 'Find replace REGEX'
 label: 'ORCID API'
 id: orcid_api
 description: ''
