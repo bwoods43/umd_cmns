@@ -43,20 +43,18 @@ class UmdCmnsResearchHelper {
 			$results = $response->getBody()->getContents();
 
 			if ($results) {	
-				// remove extra selectors so that the php simplexml function will work properly
-				$xml = str_replace('xmlns:internal="http://www.orcid.org/ns/internal" xmlns:education="http://www.orcid.org/ns/education" xmlns:distinction="http://www.orcid.org/ns/distinction" xmlns:deprecated="http://www.orcid.org/ns/deprecated" xmlns:other-name="http://www.orcid.org/ns/other-name" xmlns:membership="http://www.orcid.org/ns/membership" xmlns:error="http://www.orcid.org/ns/error" xmlns:common="http://www.orcid.org/ns/common" xmlns:record="http://www.orcid.org/ns/record" xmlns:personal-details="http://www.orcid.org/ns/personal-details" xmlns:keyword="http://www.orcid.org/ns/keyword" xmlns:email="http://www.orcid.org/ns/email" xmlns:external-identifier="http://www.orcid.org/ns/external-identifier" xmlns:funding="http://www.orcid.org/ns/funding" xmlns:preferences="http://www.orcid.org/ns/preferences" xmlns:address="http://www.orcid.org/ns/address" xmlns:invited-position="http://www.orcid.org/ns/invited-position" xmlns:work="http://www.orcid.org/ns/work" xmlns:history="http://www.orcid.org/ns/history" xmlns:employment="http://www.orcid.org/ns/employment" xmlns:qualification="http://www.orcid.org/ns/qualification" xmlns:service="http://www.orcid.org/ns/service" xmlns:person="http://www.orcid.org/ns/person" xmlns:activities="http://www.orcid.org/ns/activities" xmlns:researcher-url="http://www.orcid.org/ns/researcher-url" xmlns:peer-review="http://www.orcid.org/ns/peer-review" xmlns:bulk="http://www.orcid.org/ns/bulk" xmlns:research-resource="http://www.orcid.org/ns/research-resource"', '', $results);
-				$xml = simplexml_load_string($xml);
-				$json = json_encode($xml);
-				$array = json_decode($json,TRUE);
+				$xml = simplexml_load_string($results);
+				$work = $xml->children('work', true);
+				$array = json_decode(json_encode($work), true);
 
 				$contributors = 0;
-				if (isset($array['work:contributors'])) {
-					foreach ($array['work:contributors'] as $contributors) {
-						if (isset($contributors['work:credit-name'])) {
-							$contributors_array[] = $contributors['work:credit-name'];				
+				if (isset($array['contributors']) && count($array['contributors']) >= 1) {
+					foreach ($array['contributors'] as $contributors) {
+						if (isset($contributors['credit-name'])) {
+							$contributors_array[] = $contributors['credit-name'];				
 						} else {
 							foreach ($contributors as $contributor) {
-								$contributors_array[] = $contributor['work:credit-name'];
+								$contributors_array[] = $contributor['credit-name'];
 							}				
 						}
 					}
@@ -67,7 +65,7 @@ class UmdCmnsResearchHelper {
 			}
     	// Process the data
   	} catch (RequestException $e) {
-    	// Handle exceptions
+    	// Handle exceptions (i.e. workid matches with different orcid)
     	\Drupal::messenger()->addStatus(t('No result found with ' . $orcid_work_endpoint));
   	}	
   	
@@ -84,14 +82,14 @@ class UmdCmnsResearchHelper {
   	$nids = \Drupal::entityQuery('node')
     	->condition('type', 'paper')
     	->notExists('field_authors')
-		//	->condition('nid', 8400, '>') // skip initial paper imports
+		//	->condition('nid', 5625, '=') // skip initial paper imports
 			->range(0, 200)
 			->sort('created', 'DESC')
       ->accessCheck(FALSE) // Check access for current user.
     	->execute();
 
     foreach ($nids as $nid) {
-  // echo "NID!! " . $nid;
+   		echo "NID!! " . $nid . "\r\n";
     	$node = Node::load($nid);
     	if ($node) {   		
     		// ID specific to a paper
@@ -110,7 +108,7 @@ class UmdCmnsResearchHelper {
     			}
 				}
     	} 
-    }   
+    } 
   	\Drupal::messenger()->addStatus(t('Authors have been updated.'));
   }
 }
