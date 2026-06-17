@@ -48,14 +48,14 @@ class UmdCmnsResearchHelper {
 				$array = json_decode(json_encode($work), true);
 
 				$contributors = 0;
-				if (isset($array['contributors']) && count($array['contributors']) >= 1) {
-					foreach ($array['contributors'] as $contributors) {
-						if (isset($contributors['credit-name'])) {
-							$contributors_array[] = $contributors['credit-name'];				
-						} else {
+				if (isset($array['contributors'])) {
+					foreach ($array['contributors'] as $contributors) {					
+						if ($contributors) {						
 							foreach ($contributors as $contributor) {
-								$contributors_array[] = $contributor['credit-name'];
-							}				
+								if (isset($contributor['credit-name'])) {
+									$contributors_array[] = $contributor['credit-name'];								
+								}
+							}							
 						}
 					}
 				}
@@ -82,9 +82,9 @@ class UmdCmnsResearchHelper {
   	$nids = \Drupal::entityQuery('node')
     	->condition('type', 'paper')
     	->notExists('field_authors')
-		//	->condition('nid', 5625, '=') // skip initial paper imports
-			->range(0, 200)
-			->sort('created', 'DESC')
+		//	->condition('nid', 5624, '=') // skip initial paper imports
+			->range(0, 300)
+			->sort('changed', 'DESC')
       ->accessCheck(FALSE) // Check access for current user.
     	->execute();
 
@@ -112,4 +112,3 @@ class UmdCmnsResearchHelper {
   	\Drupal::messenger()->addStatus(t('Authors have been updated.'));
   }
 }
-
