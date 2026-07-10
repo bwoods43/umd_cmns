@@ -11,7 +11,7 @@ use Drupal\Core\Messenger\MessengerInterface;
  *
  */
 function umd_cmns_views_pre_view(\Drupal\views\ViewExecutable $view, $display_id, array $args) {
-  if ($view->id() === 'news' && ($display_id === 'block_4' || $display_id === 'block_7')) {  
+  if ($view->id() === 'news' && ($display_id === 'block_4' || $display_id === 'block_7' || $display_id === 'block_11')) {  
   	// look up node to see if primary tag exists
   	$node = \Drupal::request()->attributes->get('node');
 
