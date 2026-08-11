@@ -94,3 +94,16 @@ function umd_cmns_cron() {
   // Log message:
   \Drupal::messenger()->addStatus('umd_cmns_cron() was executed.');
 }
+
+/**
+ * Implements hook_page_attachments_alter().
+ */
+function umd_cmns_page_attachments_alter(array &$attachments) {
+  // Retrieve the currently active theme name
+  $active_theme = \Drupal::theme()->getActiveTheme()->getName();
+  
+  // Attach the library only if the theme is 'claro'
+  if ($active_theme === 'claro') {
+    $attachments['#attached']['library'][] = 'umd_cmns/claro_customizations';
+  }
+}
