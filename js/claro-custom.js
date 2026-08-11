@@ -10,7 +10,7 @@
 				// set the default only if it's new (on insert)
 				const literalPath = element.getAttribute('action'); 
 				if (literalPath.includes('/insert')) {			
-					const paragraphsWithDefaults = ['edit-layout-paragraphs-component-form-view', 'edit-layout-paragraphs-component-form-card'];
+					const paragraphsWithDefaults = ['edit-layout-paragraphs-component-form-view', 'edit-layout-paragraphs-component-form-card', 'edit-layout-paragraphs-component-form-text'];
 					const customValue = element.getAttribute('data-drupal-selector');
 
 					// check if select option is the proper style option and is empty
