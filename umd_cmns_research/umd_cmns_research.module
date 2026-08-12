@@ -19,12 +19,15 @@ function umd_cmns_research_views_pre_view(\Drupal\views\ViewExecutable $view, $d
   	if (!$node) { return; }
   	
   	$node = \Drupal\node\Entity\Node::load($node->id());	
-		$orcid = $node->get('field_orcid')->getValue();
-		// set contextual filter as the team member's orcid				
-  	if ($orcid) {
-      //$args[0] = '220000-0002-7269-342X';
-      $args[0] = $orcid[0]['value'];
-      $view->setArguments($args);  	
+  	
+  	if ($node->hasField('field_orcid')) { 	
+			$orcid = $node->get('field_orcid')->getValue();
+			// set contextual filter as the team member's orcid				
+  		if ($orcid) {
+      	//$args[0] = '220000-0002-7269-342X';
+      	$args[0] = $orcid[0]['value'];
+      	$view->setArguments($args);  	
+  		}
   	}
   }  
 }
