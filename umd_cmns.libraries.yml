@@ -1,6 +1,0 @@
-claro_customizations:
-  version: 1.0
-  js:
-    js/claro-custom.js: {}
-  dependencies:
-    - core/drupal
